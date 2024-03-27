@@ -13,34 +13,36 @@ func main() {
 
     const conferenceTicket int = 50
     var conferenceTicketLeft int = 50
-
+	
     fmt.Printf("Welcome to %v \n", conferenceName)
     fmt.Printf("Check our this one!, ticket left is %v from total %v \n \n", conferenceTicketLeft, conferenceTicket)
-
+	
     for {
-        var bookedPersons []string
+		var bookedPersons []string
         var bookedTicket []int
-
+		
         for {
-            // Error handling untuk username
+			// Error handling untuk username
             for {
-                fmt.Println("Get your ticket here, and please enter your full name (e.g., First Last):")
-
+				fmt.Println("Get your ticket here, and please enter your full name (e.g., First Last):")
+				
                 reader := bufio.NewReader(os.Stdin)
                 fullName, err := reader.ReadString('\n')
                 if err != nil {
-                    fmt.Println("Error reading input. Please try again.")
+					fmt.Println("Error reading input. Please try again.")
                     continue
                 }
-
+				
                 fullName = strings.TrimSpace(fullName)
                 nameParts := strings.SplitN(fullName, " ", 2)
                 if len(nameParts) != 2 {
-                    fmt.Println("Invalid input. Please enter both first and last name separated by a space.")
+					fmt.Println("Invalid input. Please enter both first and last name separated by a space.")
                     continue
                 }
+				var firstName string
 
-                bookedPersons = append(bookedPersons, fullName)
+				firstName = nameParts[0]
+                bookedPersons = append(bookedPersons, firstName)
                 break
             }
 
@@ -81,7 +83,7 @@ func main() {
             fmt.Println("Here are the list of person booked ticket:")
             for _, person := range bookedPersons {
                 fmt.Println(person)
-				break
+				// break
             }
 
             fmt.Println("Here are the list of booked ticket:")
@@ -101,7 +103,6 @@ func main() {
                 break
             }
         }
-
         fmt.Println("Thank you for booking tickets. Have a great day!")
         break
     }
