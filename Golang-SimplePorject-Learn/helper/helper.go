@@ -1,11 +1,16 @@
 package helper
 
 import (
-	"bufio"
+    "bufio"
     "fmt"
     "os"
     "strings"
 )
+
+type UserData struct {
+    EmailUser   string
+    UserTicket  int
+}
 
 func GetValidFullName() string {
     for {
@@ -33,23 +38,22 @@ func GetValidFullName() string {
 }
 
 func GetValidEmail() string {
-    var emailUser string
     for {
         fmt.Println("Please enter your email:")
+        var emailUser string
         _, err := fmt.Scan(&emailUser)
         if err != nil || !Valid(emailUser) {
             fmt.Println("Invalid email. Please enter a valid email address.")
             continue
         }
-        break
+        return emailUser
     }
-    return emailUser
 }
 
 func GetValidTicket(conferenceTicketLeft int) int {
-    var userTicket int
     for {
         fmt.Println("Please enter the number of tickets you want to buy:")
+        var userTicket int
         _, err := fmt.Scan(&userTicket)
         if err != nil || userTicket <= 0 {
             fmt.Println("Invalid input. Please enter a valid number of tickets.")
@@ -59,7 +63,6 @@ func GetValidTicket(conferenceTicketLeft int) int {
             fmt.Println("Insufficient tickets available.")
             continue
         }
-        break
+        return userTicket
     }
-    return userTicket
 }
