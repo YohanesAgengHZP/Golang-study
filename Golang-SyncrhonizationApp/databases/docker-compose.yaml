@@ -1,0 +1,72 @@
+version: '3.9'
+
+x-default-logging: &logging
+  driver: "json-file"
+  options:
+    max-size: "5m"
+    max-file: "3"
+
+networks:
+  learning-golang-networks:
+    name: learning-golang-networks
+    external: true
+
+volumes:
+  db-mysql:
+    driver: local
+  db-cassandra:
+    driver: local
+
+services:
+  mysql:
+    image: mysql:8.0
+    cap_add:
+      - SYS_NICE
+    restart: always
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    ports:
+      - ${MYSQL_DATABASE_PORT}:3306
+    volumes:
+      - db-mysql:/var/lib/mysql
+    networks:
+      - learning-golang-networks
+  
+  cassandra:
+    image: "bitnami/cassandra:4.1.1"
+    container_name: "cassandra-1"
+    ports:
+      # https://docs.datastax.com/en/archived/cassandra/2.0/cassandra/security/secureFireWall_r.html
+      # - ${CASSANDRA_PORT_7000}:7000 # Cassandra inter-node cluster communication.
+      # - ${CASSANDRA_PORT_7001}:7001 # Cassandra SSL inter-node cluster communication.
+      # - ${CASSANDRA_PORT_7199}:7199 # Cassandra JMX monitoring port.
+      - ${CASSANDRA_PORT_9042}:9042 # Cassandra client port.
+      - ${CASSANDRA_PORT_9160}:9160 # Cassandra client port (Thrift).
+      # - ${CASSANDRA_PORT_61620}:61620 # OpsCenter monitoring port. The opscenterd daemon listens on this port for TCP traffic coming from the agent.
+      # - ${CASSANDRA_PORT_61621}:61621 # OpsCenter agent port. The agents listen on this port for SSL traffic initiated by OpsCenter.
+      # - ${CASSANDRA_PORT_8888}:8888 # OpsCenter website. The opscenterd daemon listens on this port for HTTP requests coming directly from the browser.
+    environment:
+      # - "CASSANDRA_CLUSTER_NAME=${CASSANDRA_CLUSTER_NAME}"
+      # needed for setting up custom cluster name
+      - "CASSANDRA_DATACENTER=${CASSANDRA_DATACENTER}"
+      - "CASSANDRA_ENDPOINT_SNITCH=${CASSANDRA_ENDPOINT_SNITCH}"
+      - "CASSANDRA_USER=${CASSANDRA_USER}"
+      - "CASSANDRA_PASSWORD_SEEDER=${CASSANDRA_PASSWORD_SEEDER}"
+      - "CASSANDRA_PASSWORD=${CASSANDRA_PASSWORD}"
+      - "CASSANDRA_RACK=${CASSANDRA_RACK_MASTER}"
+      - "MAX_HEAP_SIZE=256M"
+      - "HEAP_NEWSIZE=128M"
+      - "TZ=${TZ}"
+    logging: *logging
+    networks:
+      - learning-golang-networks
+    volumes:
+      - ./init-cassandra.sh:/docker-entrypoint-initdb.d/init-cassandra.sh
+      # - ./init-table.sh:/docker-entrypoint-initdb.d/init-table.sh
+      - ./smr_schema.cql:/schema.cql
+      - db-cassandra:/var/lib/cassandra
+      - ./number_routing_table.csv:/data/number_routing_table.csv
+
