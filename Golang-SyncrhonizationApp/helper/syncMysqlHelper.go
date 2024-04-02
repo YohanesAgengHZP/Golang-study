@@ -27,7 +27,11 @@ func SyncStatusNumber() {
 	fmt.Println("===============================")
 	dateTime()
 
-	mysqlConnection.ConnectionMysql()
-	// res, err := mysqlConnection.ConnectionMysql.Query("SELECT * FROM cities")
+	Connection.ConnectionMySql()
+	fmt.Println("")
+	Connection.ConnectionCassandra()
+}
 
+func QueryMySQL() {
+	
 }
