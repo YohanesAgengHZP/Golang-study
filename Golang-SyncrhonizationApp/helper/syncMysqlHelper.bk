@@ -1,0 +1,187 @@
+package helper
+
+import (
+	"database/sql"
+	"fmt"
+	"time"
+
+	Connection "sync-databases-cass-mysql/connection"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+var chunkSize = 20
+
+func dateTime() {
+	// Get current date and time
+	currentTime := time.Now()
+
+	// Format date and time
+	formattedTime := currentTime.Format("2006-01-02 15:04:05")
+
+	// Print formatted date and time
+	fmt.Println(formattedTime)
+}
+
+func SyncAll() {
+	// Establish MySQL connection
+	db, err := Connection.ConnectionMySql()
+	if err != nil {
+		fmt.Println("Error connecting to MySQL:", err)
+		return
+	}
+	defer db.Close()
+
+	// Create channels for signaling completion and errors
+	chDone := make(chan struct{})
+	chErr := make(chan error)
+
+	// Execute GetNumber
+	go func() {
+		defer func() {
+			chDone <- struct{}{} // Signal completion
+		}()
+
+		rows, err := GetNumber(db)
+		if err != nil {
+			chErr <- fmt.Errorf("error fetching numbers from MySQL: %v", err)
+			return
+		}
+		fmt.Println("MySQL numbers:", rows)
+		fmt.Printf("============================================================= \n")
+	}()
+
+	// Wait for the Goroutine to finish
+	select {
+	case <-chDone: // Receive from the channel
+	case err := <-chErr:
+		fmt.Println(err) // Print any errors received
+	}
+
+	fmt.Println("All Goroutines completed")
+}
+
+
+// func SyncStatusNumber() {
+// 	// Establish MySQL connection
+// 	db, err := Connection.ConnectionMySql()
+// 	if err != nil {
+// 		fmt.Println("Error connecting to MySQL:", err)
+// 		return
+// 	}
+// 	defer db.Close()
+
+// 	// Create channels for signaling completion and errors
+// 	chDone := make(chan struct{})
+// 	chErr := make(chan error)
+
+// 	// Execute GetNumber
+// 	go func() {
+// 		defer func() {
+// 			chDone <- struct{}{} // Signal completion
+// 		}()
+
+// 		rows, err := GetNumber(db)
+// 		if err != nil {
+// 			chErr <- fmt.Errorf("error fetching numbers from MySQL: %v", err)
+// 			return
+// 		}
+// 		fmt.Println("MySQL numbers:", rows)
+// 		fmt.Printf("============================================================= \n")
+// 	}()
+
+// 	// Execute GetAvoid
+// 	go func() {
+// 		defer func() {
+// 			chDone <- struct{}{} // Signal completion
+// 		}()
+
+// 		avoidBrands, err := GetAvoid(db)
+// 		if err != nil {
+// 			chErr <- fmt.Errorf("error fetching avoid brands from MySQL: %v", err)
+// 			return
+// 		}
+// 		fmt.Println("Avoid brands:", avoidBrands)
+// 		fmt.Printf("============================================================= \n")
+// 	}()
+
+// 	// Wait for all Goroutines to finish
+// 	for i := 0; i < 2; i++ {
+// 		select {
+// 		case <-chDone: // Receive from the channel
+// 		case err := <-chErr:
+// 			fmt.Println(err) // Print any errors received
+// 		}
+// 	}
+// 	fmt.Println("All Goroutines completed")
+// }
+
+func GetNumber(db *sql.DB) ([]map[string]interface{}, error) {
+	// Connection.ConnectionMySql()
+	query := `SELECT
+                tmr.msisdn AS number,
+                COALESCE(tgr.target_id, 0) AS target_a2p,
+                COALESCE(tgr2.target_id, 0) AS target_p2p,
+                tmr.status
+              FROM
+                t_msisdn_routing tmr
+                LEFT JOIN t_groups_routes tgr ON tgr.id = tmr.sms_a2p
+                LEFT JOIN t_groups_routes tgr2 ON tgr2.id = tmr.sms_p2p`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := make([]map[string]interface{}, 0)
+
+	for rows.Next() {
+		var number string
+		var targetA2P, targetP2P int
+		var status sql.NullString
+		if err := rows.Scan(&number, &targetA2P, &targetP2P, &status); err != nil {
+			return nil, err
+		}
+		row := map[string]interface{}{
+			"number":     number,
+			"target_a2p": targetA2P,
+			"target_p2p": targetP2P,
+			"status":     status,
+		}
+		result = append(result, row)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// func GetAvoid(db *sql.DB) ([]string, error) {
+// 	// Connection.ConnectionMySql()
+// 	query := "SELECT name FROM t_avoid_brands"
+
+// 	rows, err := db.Query(query)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
+
+// 	var avoidBrands []string
+
+// 	for rows.Next() {
+// 		var name string
+// 		if err := rows.Scan(&name); err != nil {
+// 			return nil, err
+// 		}
+// 		avoidBrands = append(avoidBrands, name)
+// 	}
+
+// 	if err := rows.Err(); err != nil {
+// 		return nil, err
+// 	}
+
+// 	return avoidBrands, nil
+// }

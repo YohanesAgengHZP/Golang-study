@@ -1,0 +1,48 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+        cors:
+          allowed_origins:
+            - "http://*"
+            - "https://*"
+  # otlp/smrmonitor:
+  #   protocols:
+  #     grpc:
+  #       endpoint: 0.0.0.0:4319
+  
+processors:
+  batch:
+  resourcedetection:
+    detectors: [system]
+
+exporters:
+  logging:
+  prometheusremotewrite:
+    # endpoint: http://admin:admin@prometheus:9090/api/v1/write
+    endpoint: http://prometheus:9090/api/v1/write
+  # prometheusremotewrite/v2:
+  #   # endpoint: http://admin:admin@prometheusv2:9090/api/v1/write
+  #   endpoint: http://prometheusv2:9090/api/v1/write
+  jaeger:
+    endpoint: "jaeger:14250"
+    tls:
+      insecure: true 
+
+service:
+  telemetry:
+    metrics:
+      level: detailed
+      address: 0.0.0.0:8888
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging, jaeger]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging, prometheusremotewrite]

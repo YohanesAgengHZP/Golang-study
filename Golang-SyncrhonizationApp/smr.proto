@@ -1,0 +1,39 @@
+syntax = "proto3";
+option go_package = "sync-databases-cass-mysql/protobuf";
+
+service SmrSync {
+    rpc syncData (DataRequest) returns (DataResponse);
+    rpc syncAvoid (Avoid) returns (DataResponse);
+    rpc syncNumber (DataNumber) returns (DataResponse);
+  }
+  
+  message DataRequest {
+    repeated Avoid avoid = 1;
+    repeated Number number = 2;
+  }
+  
+  message DataNumber {
+    string type = 1;
+    bool by_file = 2;
+    repeated NumberAPI number = 3;
+  }
+  
+  message Avoid {
+    string name = 1;
+  }
+  
+  message Number {
+    string number = 1;
+    uint32 target_a2p = 2;
+    uint32 target_p2p = 3;
+    uint32 status = 4;
+  }
+  
+  message NumberAPI {
+    string number = 1;
+    uint32 route_id = 3;
+  }
+  
+  message DataResponse {
+    bool success = 1;
+  }
