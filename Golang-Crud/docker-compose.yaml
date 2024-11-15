@@ -1,0 +1,13 @@
+services:
+  mysql:
+    image: mysql:9
+    container_name: testing_mysql
+    ports:
+      - 3306:3306
+    environment:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_ROOT_USERNAME: root
+        MYSQL_DATABASE: golang_crud
+    volumes:
+      - ./mysql:/var/lib/mysql
+      - ./init-scripts:/docker-entrypoint-initdb.d
