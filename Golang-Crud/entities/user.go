@@ -11,4 +11,3 @@ type User struct {
 	Email 		string		`json:"Email"`
 	Created_at 	time.Time	`json:"Created_at"`
 }
-

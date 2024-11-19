@@ -3,26 +3,27 @@ package main
 import (
 	"fmt"
 	"golang-crud/config"
-	homecontroller "golang-crud/controller"
-	userController "golang-crud/controller"
+	controllers "golang-crud/controller"
+	"golang-crud/initializer"
+	"os"
 
-	"net/http"
+	"github.com/gin-gonic/gin"
 )
 
+func init() {
+	initializer.LoadEnvVar()
+	config.ConnectDatabase()
+}
+
 func main() {
-	config.ConnectDB()
+	port := os.Getenv("PORT")
+	r := gin.Default()
+	r.POST("/add", controllers.CreateUser)
+	r.GET("/users", controllers.ShowUser)
+	r.GET("/users/:id", controllers.ShowUserByID)
+	r.PUT("/users/:id", controllers.UpdateUserByID)
+	r.DELETE("/users/:id", controllers.DeleteUserByID)
 
-	//1 Homepage
-	http.HandleFunc("/", homecontroller.Welcome)
-
-	//2. user
-	http.HandleFunc("/users", userController.Index)
-	// http.HandleFunc("/users/add", userController.App)
-	// http.HandleFunc("/users/edit", userController.Edit)
-	// http.HandleFunc("/users/delete", userController.Delete)
-
-	port := "8080"
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		fmt.Println("Server is listening on port:", port)
-	}
+	r.Run()
+	fmt.Println("Server running on port: ", port)
 }

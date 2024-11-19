@@ -9,5 +9,4 @@ services:
         MYSQL_ROOT_USERNAME: root
         MYSQL_DATABASE: golang_crud
     volumes:
-      - ./mysql:/var/lib/mysql
       - ./init-scripts:/docker-entrypoint-initdb.d

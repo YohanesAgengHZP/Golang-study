@@ -2,30 +2,25 @@ package config
 
 import (
 	"fmt"
-	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
+	"os"
+
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
-var db *sql.DB
+var (
+	DB  *gorm.DB
+	err error
+)
 
-func ConnectDB() *sql.DB {
-	// If the db connection is already established, return it
-	if db != nil {
-		return db
-	}
+func ConnectDatabase() {
+	dsn := os.Getenv("DB_CREDENTIAL")
+	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
-	var err error
-	db, err = sql.Open("mysql", "root:root@tcp(localhost:3306)/golang_crud?parseTime=true")
 	if err != nil {
-		panic(err.Error())
+		fmt.Println("Error connecting to Database:", err)
+		return
 	}
-
-	// Test the connection
-	err = db.Ping()
-	if err != nil {
-		panic(err.Error())
-	}
-
-	fmt.Println("Database connected successfully!")
-	return db
+	fmt.Println(dsn)
+	fmt.Println("Database connection established")
 }
